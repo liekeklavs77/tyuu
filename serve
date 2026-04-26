@@ -20,7 +20,7 @@ APP_NAME=${APP_NAME:-GoBitrage}
 APP_ENV=${APP_ENV:-production}
 APP_KEY=${APP_KEY:-}
 APP_DEBUG=${APP_DEBUG:-false}
-APP_URL=${APP_URL:-http://localhost}
+APP_URL=${RENDER_EXTERNAL_URL:-${APP_URL:-http://localhost}}
 
 DB_CONNECTION=${DB_CONNECTION:-mysql}
 DB_HOST=${DB_HOST:-127.0.0.1}
@@ -41,6 +41,12 @@ SESSION_LIFETIME=${SESSION_LIFETIME:-120}
 EOF
 
 echo ".env file generated with DB_HOST=${DB_HOST} DB_PORT=${DB_PORT} SSL_CA=${SSL_CA_PATH}"
+
+# Fix storage permissions (required or Laravel throws 500 errors)
+echo "Setting storage permissions..."
+chmod -R 777 storage bootstrap/cache 2>/dev/null || true
+mkdir -p storage/logs storage/framework/cache storage/framework/sessions storage/framework/views
+chmod -R 777 storage bootstrap/cache
 
 # Generate APP_KEY if missing
 if [ -z "$APP_KEY" ]; then
