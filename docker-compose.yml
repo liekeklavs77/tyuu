@@ -1,0 +1,56 @@
+version: '3'
+services:
+    # to host online, add caddy to this setup and configure the reverse proxy
+    gobitrage_app:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        container_name: gobitrage_app
+        restart: unless-stopped
+        working_dir: /var/www
+        volumes:
+            - ./:/var/www
+        ports:
+            - "8000:8000"
+        env_file:
+            - .env
+        environment:
+            - COMPOSER_ALLOW_SUPERUSER=1
+            - APP_ENV=local
+            - APP_DEBUG=true
+            - APP_CIPHER=aes-256-cbc
+            - DB_CONNECTION=mysql
+            - DB_HOST=gobitrage_db
+            - DB_PORT=3306
+            - DB_DATABASE=gobitrage_database
+            - DB_USERNAME=gobitrage_user
+            - DB_PASSWORD=gobitrage_pass
+        depends_on:
+            - gobitrage_db
+        command: php artisan serve --host=0.0.0.0 --port=8000
+        networks:
+            - gobitrage_network
+
+    gobitrage_db:
+        image: mysql:5.7
+        container_name: gobitrage_db
+        restart: unless-stopped
+        environment:
+            MYSQL_DATABASE: gobitrage_database
+            MYSQL_ROOT_PASSWORD: root
+            MYSQL_USER: gobitrage_user
+            MYSQL_PASSWORD: gobitrage_pass
+        ports:
+            - "3307:3306"
+        volumes:
+            - dbdata:/var/lib/mysql
+        networks:
+            - gobitrage_network
+
+volumes:
+    dbdata:
+        driver: local
+
+networks:
+    gobitrage_network:
+        driver: bridge
